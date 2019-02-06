@@ -10,12 +10,6 @@
 # - mp4v2
 #
 
-die() {
-  echo "No coverart I guess."
-  rm "$filename"
-  exit 0
-}
-
 filename="$1"
 alac_filename="${filename%.*}.m4a"
 ffmpeg -y -i "$filename" -acodec alac -vn "$alac_filename"
@@ -27,8 +21,17 @@ ffmpeg -i "$filename" -map 0:$( \
     -print_format json \
     -hide_banner \
     -select_streams v \
-    -show_streams "$filename" | jq '.streams[] | if .tags.comment == "Cover (front)" then .index else empty end') "$pic_name" || die
+    -show_streams "$filename" | jq '.streams[] | if .tags.comment == "Cover (front)" then .index else empty end') "$pic_name" || if [ -e "$alac_filename" ]; then
+      # if alac file exists we can safey remove source file and finish the script
+      echo "No cover art I guess"
+      rm "$filename"
+      exit 0
+    fi
 
+# If cover art was found apply it to alac file
 mp4art --add "$pic_name" "$alac_filename"
 rm "$pic_name"
-rm "$filename"
+# Remove source file if dest file exists
+if [ -e "$alac_filename" ]; then
+  rm "$filename"
+fi

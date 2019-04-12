@@ -50,7 +50,7 @@ for filename in "$@"; do
       -hide_banner \
       -select_streams v \
       -show_streams "$filename" | jq '.streams[] | if .tags.comment == "Cover (front)" then .index else empty end') "$pic_name" || if [ -e "$alac_filename" ]; then
-        # if alac file exists we can safey remove source file and finish the script
+        # if alac file exists we can safely remove source file and finish the script
         echo "No cover art I guess"
         rm "$filename"
         exit 0
